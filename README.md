@@ -1,2 +1,2 @@
 # community-detection
-A big data project for detecting communities under the contributors of GitHub repositories. 
+A big data project for detecting communities of the contributors of GitHub repositories.
