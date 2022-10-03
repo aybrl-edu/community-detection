@@ -14,7 +14,7 @@ import string
 
 # Globals
 SEARCH_DEPTH = 2
-MIN_REPOS_TO_VISIT = 500
+MIN_REPOS_TO_VISIT = 7000
 nodes_file = open("data/nodes_data.json", "w")
 edges_file = open("data/edges_data.json", "w")
 
@@ -40,7 +40,15 @@ def launch(launches):
     start_repo_owner = api_helper.get("start_point").get("repo_owner")
 
     print("#### Data extraction has started... ####")
-    status = extract_data(s_depth, repos_visited, start_repo_name, start_repo_owner, launches)
+
+    status = False
+
+    try:
+        status = extract_data(s_depth, repos_visited, start_repo_name, start_repo_owner, launches)
+
+    except Exception:
+        nodes_file.close()
+        edges_file.close()
 
     if status:
         if repos_visited < MIN_REPOS_TO_VISIT:
