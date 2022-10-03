@@ -21,7 +21,7 @@ api_helper = {
         "repo_name": "node",
         "repo_owner": "nodejs"
     },
-    "token": "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"
+    "token": "FILTERED"
 }
 
 network_data_structure = {
