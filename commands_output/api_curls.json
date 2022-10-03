@@ -1,0 +1,6 @@
+{
+    "user_repos" : "curl -H \"Accept: application/vnd.github+json\" -H \"Authorization: Bearer <YOUR-TOKEN>\"  https://api.github.com/users/USERNAME/repos",
+    "org_repos" : "curl -H \"Accept: application/vnd.github+json\" -H \"Authorization: Bearer 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\" https://api.github.com/orgs/ORG/repos",
+    "repo_topics" : "curl -H \"Accept: application/vnd.github+json\" -H \"Authorization: Bearer <YOUR-TOKEN>\" https://api.github.com/repos/OWNER/REPO/topics",
+    "repo_contributors" : "curl -H \"Accept: application/vnd.github+json\" -H \"Authorization: Bearer <YOUR-TOKEN>\" https://api.github.com/repos/OWNER/REPO/contributors"
+}
