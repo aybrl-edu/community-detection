@@ -1,2 +1,5 @@
+from data_extractor import launch
+
 if __name__ == '__main__':
-    print("Hello Wolrd")
+    network = launch(1)
+    print(network)
