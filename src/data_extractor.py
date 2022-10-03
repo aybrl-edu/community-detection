@@ -1,4 +1,5 @@
 import requests
+import string
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Example of a search of depth = 2                                                          #
@@ -14,6 +15,8 @@ import requests
 # Globals
 SEARCH_DEPTH = 2
 MIN_REPOS_TO_VISIT = 500
+nodes_file = open("data/nodes_data.json", "w")
+edges_file = open("data/edges_data.json", "w")
 
 api_helper = {
     "base_url": "https://api.github.com",
@@ -45,9 +48,18 @@ def launch(launches):
             launch(launches + 1)
 
         print("#### Data has been successfully extracted. Please check the /data/ directory ####")
-        return
+
+        nodes_file.close()
+        edges_file.close()
+
+        return True
 
     print("#### Something went wrong while extracting data! ####")
+
+    nodes_file.close()
+    edges_file.close()
+
+    return False
 
 
 def extract_data(s_depth, repos_visited, repo_name, repo_owner, page):
@@ -60,20 +72,29 @@ def extract_data(s_depth, repos_visited, repo_name, repo_owner, page):
         cont_repos = get_user_repos(contributor['repos_url'], True)
         print(f"Contributor level : handling {contributor['login']}")
 
+        if not cont_repos:
+            continue
+
         for repo in cont_repos:
             print(f"Repo level : handling {repo['name']}")
             repo_languages = get_repo_languages(repo["name"], contributor["login"])
 
-            network_data_structure.get("nodes").append({
+            # Repo as node
+            node = {
                 "repo_name": repo["name"],
                 "repo_owner": contributor["login"],
                 "repo_languages": repo_languages
-            })
+            }
+            network_data_structure.get("nodes").append(node)
+            nodes_file.write(str(node)+",\n")
 
-            network_data_structure.get("links").append({
+            # Repo <-> Repo edge
+            edge = {
                 "source": repo_name,
                 "target": repo["name"]
-            })
+            }
+            network_data_structure.get("links").append(edge)
+            edges_file.write(str(edge)+",\n")
 
             if s_depth < SEARCH_DEPTH:
                 extract_data(s_depth + 1, repos_visited + 1, repo["name"], contributor["login"], 1)
@@ -82,7 +103,7 @@ def extract_data(s_depth, repos_visited, repo_name, repo_owner, page):
 
 
 def get_repo_users(repo, owner, page=1):
-    endpoint = f"{api_helper.get('base_url')}/repos/{owner}/{repo}/contributors?per_page=100&page={page}"
+    endpoint = f"{api_helper.get('base_url')}/repos/{owner}/{repo}/contributors?per_page=20&page={page}"
     return make_request(endpoint)
 
 
