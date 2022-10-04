@@ -1,5 +1,6 @@
 import requests
 import string
+import time
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Example of a search of depth = 2                                                          #
@@ -34,6 +35,7 @@ network_data_structure = {
 
 contributors_visited = {}
 repositories_visited = {}
+
 
 def launch(launches):
     s_depth = 0
@@ -76,27 +78,28 @@ def extract_data(s_depth, repos_visited, repo_name, repo_owner, page):
     if s_depth > SEARCH_DEPTH:
         return True
 
-    first_level_contributors_list = get_repo_users(repo_name, repo_owner, page)
+    contributors_list = get_repo_users(repo_name, repo_owner, page)
 
-    for contributor in first_level_contributors_list:
-        if repos_visited[f"{contributor['login']}"]:
+    for contributor in contributors_list:
+
+        if contributors_visited.get(contributor['login']):
             continue
 
         print(f"Contributor level : handling {contributor['login']}")
 
-        repos_visited[f"{contributor['login']}"] = True
+        contributors_visited[contributor['login']] = True
         cont_repos = get_user_repos(contributor['repos_url'], True)
 
         if not cont_repos:
             continue
 
         for repo in cont_repos:
-            if repos_visited[f"{repo['name']}"]:
+            if repositories_visited.get(repo['name']):
                 continue
 
             print(f"Repo level : handling {repo['name']}")
 
-            repos_visited[f"{repo['name']}"] = True
+            repositories_visited[repo['name']] = True
             repo_languages = get_repo_languages(repo["name"], contributor["login"])
 
             # Repo as node
@@ -152,4 +155,19 @@ def make_request(endpoint):
     if response.status_code == 200:
         return response.json()
 
+    if "API rate limit exceeded" in response.text:
+        stop_extraction()
+
+        response = requests.get(endpoint, headers=headers)
+
+        if response.status_code == 200:
+            return response.json()
+
+    print(response.text)
     return False
+
+
+def stop_extraction():
+    print("#### API rate limit exceeded, extraction has been stopped for 1 hour... ####")
+    time.sleep(4000)
+    print("#### Extraction will be resumed shortly! ####")
