@@ -122,6 +122,9 @@ def extract_data(s_depth, repos_visited, repo_name, repo_owner, page):
             if s_depth < SEARCH_DEPTH:
                 extract_data(s_depth + 1, repos_visited + 1, repo["name"], contributor["login"], 1)
 
+        # Sleep to avoid exceeding API limit
+        time.sleep(1)
+
     return network_data_structure
 
 
@@ -156,12 +159,12 @@ def make_request(endpoint):
         return response.json()
 
     if "API rate limit exceeded" in response.text:
-        stop_extraction()
+        while True:
+            time.sleep(10)
 
-        response = requests.get(endpoint, headers=headers)
-
-        if response.status_code == 200:
-            return response.json()
+            response = requests.get(endpoint, headers=headers)
+            if response.status_code == 200:
+                return response.json()
 
     print(response.text)
     return False
