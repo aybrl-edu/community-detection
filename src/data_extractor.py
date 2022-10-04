@@ -14,8 +14,9 @@ import time
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 # Globals
-SEARCH_DEPTH = 2
-MIN_REPOS_TO_VISIT = 7000
+SEARCH_DEPTH = 3
+MIN_REPOS_TO_VISIT = 10000
+MAX_REPOS_TO_VISIT = 60000
 nodes_file = open("data/nodes_data.json", "w")
 edges_file = open("data/edges_data.json", "w")
 
@@ -26,6 +27,11 @@ api_helper = {
         "repo_owner": "nodejs"
     },
     "token": "FILTERED"
+}
+
+
+globals_vars = {
+    "repos_visited": 0
 }
 
 network_data_structure = {
@@ -39,7 +45,6 @@ repositories_visited = {}
 
 def launch(launches):
     s_depth = 0
-    repos_visited = 0
     start_repo_name = api_helper.get("start_point").get("repo_name")
     start_repo_owner = api_helper.get("start_point").get("repo_owner")
 
@@ -48,14 +53,14 @@ def launch(launches):
     status = False
 
     try:
-        status = extract_data(s_depth, repos_visited, start_repo_name, start_repo_owner, launches)
+        status = extract_data(s_depth, globals_vars.get("repos_visited"), start_repo_name, start_repo_owner, launches)
 
     except Exception:
         nodes_file.close()
         edges_file.close()
 
     if status:
-        if repos_visited < MIN_REPOS_TO_VISIT:
+        if globals_vars.get("repos_visited") < MIN_REPOS_TO_VISIT:
             # Move to the second page of the initial repo
             launch(launches + 1)
 
@@ -85,8 +90,6 @@ def extract_data(s_depth, repos_visited, repo_name, repo_owner, page):
         if contributors_visited.get(contributor['login']):
             continue
 
-        print(f"Contributor level : handling {contributor['login']}")
-
         contributors_visited[contributor['login']] = True
         cont_repos = get_user_repos(contributor['repos_url'], True)
 
@@ -96,8 +99,6 @@ def extract_data(s_depth, repos_visited, repo_name, repo_owner, page):
         for repo in cont_repos:
             if repositories_visited.get(repo['name']):
                 continue
-
-            print(f"Repo level : handling {repo['name']}")
 
             repositories_visited[repo['name']] = True
             repo_languages = get_repo_languages(repo["name"], contributor["login"])
@@ -119,8 +120,16 @@ def extract_data(s_depth, repos_visited, repo_name, repo_owner, page):
             network_data_structure.get("links").append(edge)
             edges_file.write(str(edge)+",\n")
 
+            repos_visited = repos_visited + 1
+            globals_vars["repos_visited"] = repos_visited
+
+            if repos_visited >= MAX_REPOS_TO_VISIT:
+                print("#### Max number of repos has been reached! ####")
+                return "end"
+
             if s_depth < SEARCH_DEPTH:
-                extract_data(s_depth + 1, repos_visited + 1, repo["name"], contributor["login"], 1)
+                s_depth = s_depth + 1
+                extract_data(s_depth, repos_visited, repo["name"], contributor["login"], 1)
 
         # Sleep to avoid exceeding API limit
         time.sleep(1)
