@@ -32,6 +32,8 @@ network_data_structure = {
     "links": []
 }
 
+contributors_visited = {}
+repositories_visited = {}
 
 def launch(launches):
     s_depth = 0
@@ -77,14 +79,24 @@ def extract_data(s_depth, repos_visited, repo_name, repo_owner, page):
     first_level_contributors_list = get_repo_users(repo_name, repo_owner, page)
 
     for contributor in first_level_contributors_list:
-        cont_repos = get_user_repos(contributor['repos_url'], True)
+        if repos_visited[f"{contributor['login']}"]:
+            continue
+
         print(f"Contributor level : handling {contributor['login']}")
+
+        repos_visited[f"{contributor['login']}"] = True
+        cont_repos = get_user_repos(contributor['repos_url'], True)
 
         if not cont_repos:
             continue
 
         for repo in cont_repos:
+            if repos_visited[f"{repo['name']}"]:
+                continue
+
             print(f"Repo level : handling {repo['name']}")
+
+            repos_visited[f"{repo['name']}"] = True
             repo_languages = get_repo_languages(repo["name"], contributor["login"])
 
             # Repo as node
