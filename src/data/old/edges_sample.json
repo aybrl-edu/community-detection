@@ -1,0 +1,5 @@
+[
+  {"source": "admin", "target": "csci-e39"},
+  {"source": "admin", "target": "dash-resources"},
+  {"source": "admin", "target": "docsearch-configs"}
+]
